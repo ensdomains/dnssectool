@@ -142,10 +142,14 @@ class App extends Component {
       )
     }
 
+    var navStyle = {
+      background:'#009DFF'
+    }
+
     return (
       <div className="App">
-        <nav className="navbar pure-menu pure-menu-horizontal">
-            <a href="#" className="pure-menu-heading pure-menu-link">Truffle Box</a>
+        <nav style={navStyle} className="navbar pure-menu pure-menu-horizontal">
+            <a href="#" className="pure-menu-heading pure-menu-link">Ethereum Name Service</a>
         </nav>
 
         <main className="container">
