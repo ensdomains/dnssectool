@@ -49,8 +49,14 @@
     "whatwg-fetch": "1.0.0"
   },
   "dependencies": {
+    "@ensdomains/dnsprovejs": "github:ensdomains/dnsprovejs#browserify",
     "@ensdomains/dnsregistrar": "github:ensdomains/dnsregistrar#dnsprove",
+    "@ensdomains/dnssec-oracle": "0.0.5",
+    "@ensdomains/ens": "^0.1.1",
+    "dns-packet": "^5.0.2",
     "dotenv": "^2.0.0",
+    "eth-ens-namehash": "^2.0.8",
+    "ethereum-ens": "^0.7.4",
     "react": "^15.4.2",
     "react-dom": "^15.4.2"
   },
