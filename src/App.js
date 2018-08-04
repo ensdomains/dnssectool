@@ -17,6 +17,7 @@ class App extends Component {
 
     this.state = {
       domain: 'matoken.xyz',
+      owner:null,
       web3: null,
       accounts:[],
       claim: null,
@@ -48,7 +49,12 @@ class App extends Component {
   }
 
   handleChange(event) {
-    this.setState({ domain: event.target.value });
+    this.setState({
+      domain: event.target.value,
+      dnsFound:false,
+      ensAddress:'0x0',
+      owner:null
+    });
   }
 
   handleLookup(event) {
@@ -131,6 +137,7 @@ class App extends Component {
       var submitProofForm = (
         <form onSubmit={this.handleSubmitProof}>
           <input type="submit" value="Submit the proof" />
+          (This will send transactions twice)
         </form>
       )
     }
@@ -146,7 +153,7 @@ class App extends Component {
             <div className="pure-u-1-1">
               <h1>DNS -> ENS Integration Example</h1>
               <form onSubmit={this.handleLookup}>
-              <input type="text" value={this.state.domain} onChange={this.handleChange} />
+              <input type="text" value={this.state.domain} onChange={this.handleChange} required />
               <input type="submit" value="Lookup" />
               <h3>On DNS</h3>
               <p>
