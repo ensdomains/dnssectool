@@ -126,8 +126,8 @@ class App extends Component {
     if(this.state.domain){
       var dnsEntry = ('_ens.' + this.state.domain)
     }
-
-    if(this.state.dnsFound && parseInt(this.state.ensAddress, 1) === 0){
+    console.log('parseInt(this.state.ensAddress, 1', parseInt(this.state.ensAddress, 0))
+    if(this.state.dnsFound && parseInt(this.state.ensAddress, 0) === parseInt(0, 0)){
       var submitProofForm = (
         <form onSubmit={this.handleSubmitProof}>
           <input type="submit" value="Submit the proof" />
