@@ -129,6 +129,11 @@ class App extends Component {
   }
 
   render() {
+    var noteStyle ={
+      margin: '5px',
+      fontSize:'small'
+    }
+
     if(this.state.domain){
       var dnsEntry = ('_ens.' + this.state.domain)
     }
@@ -137,7 +142,7 @@ class App extends Component {
       var submitProofForm = (
         <form onSubmit={this.handleSubmitProof}>
           <input type="submit" value="Submit the proof" />
-          (This will send transactions twice)
+          <span style={noteStyle}>(This will send transactions twice)</span>
         </form>
       )
     }
