@@ -146,11 +146,6 @@ class App extends Component {
       fontSize:'small'
     }
 
-    var codeStyle={
-      display:'inline',
-      padding:0
-    }
-
     if(this.state.domain){
       var dnsEntry = ('_ens.' + this.state.domain)
     }
@@ -189,17 +184,24 @@ class App extends Component {
                 </a> {this.state.owner}</p>
               </form>
               <h3>On DNSSEC Oracle</h3>
-              <ul>
+              <table>
+                <tr>
+                  <th>name</th>
+                  <th>type</th> 
+                  <th>proof</th>
+                </tr>
                 {
                   this.state.proofs.map((proof, i) => {
                     return (
-                      <li>
-                        <code style={codeStyle}>{proof.name}:{proof.type}</code> proof is {proof.proof}
-                      </li>
+                      <tr>
+                        <td>{proof.name}</td>
+                        <td>{proof.type}</td>
+                        <td>{proof.proof}</td>
+                      </tr>
                     )
                   })
                 }
-              </ul>
+              </table>
               <h3>On ENS</h3>
               <p>
                 The ENS Ethereum Address for this name is {this.state.ensAddress}
