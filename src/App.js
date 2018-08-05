@@ -20,6 +20,7 @@ class App extends Component {
       owner:null,
       web3: null,
       accounts:[],
+      proofs:[],
       claim: null,
       dnsFound:false,
       provenAddress:false
@@ -52,6 +53,7 @@ class App extends Component {
     this.setState({
       domain: event.target.value,
       dnsFound:false,
+      proofs:[],
       ensAddress:'0x0',
       owner:null
     });
@@ -112,6 +114,16 @@ class App extends Component {
         this.setState({ owner: text })
         // return claim.getProven();
         // This should also work
+        this.setState({ proofs: [] })
+
+        claim.result.proofs.map((proof, index)=>{
+          claim.oracle.knownProof(proof).then((proven)=>{
+            console.log('i', index, this.state.proofs.length,  proven);
+            this.setState({
+              proofs: this.state.proofs.concat([{name:proof.name, type:proof.type, proof:proven}])
+            })
+          })
+        })
         // return claim.oracle.knownProof(claim.result.proofs[claim.result.proofs.length -1])
       // }).then((proven)=>{
         // this.setState({provenAddress:proven});
@@ -134,6 +146,11 @@ class App extends Component {
       fontSize:'small'
     }
 
+    var codeStyle={
+      display:'inline',
+      padding:0
+    }
+
     if(this.state.domain){
       var dnsEntry = ('_ens.' + this.state.domain)
     }
@@ -154,13 +171,14 @@ class App extends Component {
     return (
       <div className="App">
         <nav style={navStyle} className="navbar pure-menu pure-menu-horizontal">
-            <a href="#" className="pure-menu-heading pure-menu-link">Ethereum Name Service</a>
+            <a href="#" className="pure-menu-heading pure-menu-link">Claim DNS on ENS Integration Example</a>
         </nav>
 
         <main className="container">
+
           <div className="pure-g">
             <div className="pure-u-1-1">
-              <h1>DNS -> ENS Integration Example</h1>
+              <h3>Domain</h3>
               <form onSubmit={this.handleLookup}>
               <input type="text" value={this.state.domain} onChange={this.handleChange} required />
               <input type="submit" value="Lookup" />
@@ -170,6 +188,18 @@ class App extends Component {
                   {dnsEntry}
                 </a> {this.state.owner}</p>
               </form>
+              <h3>On DNSSEC Oracle</h3>
+              <ul>
+                {
+                  this.state.proofs.map((proof, i) => {
+                    return (
+                      <li>
+                        <code style={codeStyle}>{proof.name}:{proof.type}</code> proof is {proof.proof}
+                      </li>
+                    )
+                  })
+                }
+              </ul>
               <h3>On ENS</h3>
               <p>
                 The ENS Ethereum Address for this name is {this.state.ensAddress}
