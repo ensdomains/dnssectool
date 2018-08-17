@@ -3,7 +3,9 @@ import DNSRegistrarContract from '../build/contracts/DNSRegistrar.json'
 import ENSRegistryContract from '../build/contracts/ENSRegistry.json'
 import namehash from 'eth-ens-namehash';
 // import ENS from 'ethereum-ens';
-const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
+// const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
+const DNSRegistrarJS = require('dnsregistrar');
+
 import getWeb3 from './utils/getWeb3'
 
 import './css/oswald.css'
@@ -91,7 +93,6 @@ class App extends Component {
     // var ens;
     var claim;
 
-    // Get accounts.
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.setState({accounts:accounts});
       DNSRegistrar.deployed().then((_registrar)=>{
@@ -102,7 +103,6 @@ class App extends Component {
       }).then((_ensContract)=>{
         ensContract = _ensContract;
         // ens = new ENS(this.state.web3.currentProvider, ensContract.address);
-      // }).then(()=>{
         return registrarjs.claim(this.state.domain);
       }).then((_claim)=>{
         claim = _claim;
@@ -111,22 +111,15 @@ class App extends Component {
         if(claim.found){
           text = `has TXT record with a=` + claim.getOwner();
         } 
-        this.setState({ owner: text })
-        // return claim.getProven();
-        // This should also work
-        this.setState({ proofs: [] })
+        this.setState({ proofs: [], owner: text })
 
         claim.result.proofs.map((proof, index)=>{
           claim.oracle.knownProof(proof).then((proven)=>{
-            console.log('i', index, this.state.proofs.length,  proven);
             this.setState({
               proofs: this.state.proofs.concat([{name:proof.name, type:proof.type, proof:proven}])
             })
           })
         })
-        // return claim.oracle.knownProof(claim.result.proofs[claim.result.proofs.length -1])
-      // }).then((proven)=>{
-        // this.setState({provenAddress:proven});
         // This should also work (but not working for some reason now.
         // return ens.resolver(this.state.domain).addr();
         return ensContract.owner.call(namehash.hash(this.state.domain));
@@ -134,8 +127,8 @@ class App extends Component {
         this.setState({ensAddress:ensResult});
       }).catch((e)=>{
         // Do now show error when ENS name is not found
-        // console.log('state', this.state)        
-        // console.log('error', e)
+        console.log('state', this.state)        
+        console.log('error', e)
       })
     })
   }
@@ -149,7 +142,6 @@ class App extends Component {
     if(this.state.domain){
       var dnsEntry = ('_ens.' + this.state.domain)
     }
-    console.log('parseInt(this.state.ensAddress, 1', parseInt(this.state.ensAddress, 0))
     if(this.state.dnsFound && parseInt(this.state.ensAddress, 0) === parseInt(0, 0)){
       var submitProofForm = (
         <form onSubmit={this.handleSubmitProof}>
