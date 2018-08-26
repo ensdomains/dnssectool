@@ -2,6 +2,7 @@
   "name": "react-box",
   "version": "0.1.0",
   "private": true,
+  "homepage": "http://makoto.github.io/dnssec-ens-example",
   "devDependencies": {
     "autoprefixer": "6.5.1",
     "babel-core": "6.17.0",
@@ -49,7 +50,7 @@
     "whatwg-fetch": "1.0.0"
   },
   "dependencies": {
-    "@ensdomains/dnsregistrar": "0.0.3",
+    "dnsregistrar": "0.0.11",
     "@ensdomains/dnssec-oracle": "0.0.5",
     "@ensdomains/ens": "^0.1.1",
     "dns-packet": "^5.0.2",
