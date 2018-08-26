@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import DNSRegistrarContract from './contracts/DNSRegistrar.json'
-import ENSRegistryContract from './contracts/ENSRegistry.json'
+import DNSRegistrarContract from '../build/contracts/DNSRegistrar.json'
+import ENSRegistryContract from '../build/contracts/ENSRegistry.json'
 import namehash from 'eth-ens-namehash';
 // import ENS from 'ethereum-ens';
 // const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
