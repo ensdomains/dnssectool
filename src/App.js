@@ -68,7 +68,7 @@ class App extends Component {
 
   handleSubmitProof(event) {
     var self = this;
-    this.state.claim.submit({ from: this.state.accounts[0], gas:6000000 }).then((trx)=>{
+    this.state.claim.submit({ from: this.state.accounts[0], gas:3000000 }).then((trx)=>{
       self.instantiateContract();
     })
     event.preventDefault();
@@ -146,7 +146,6 @@ class App extends Component {
       var submitProofForm = (
         <form onSubmit={this.handleSubmitProof}>
           <input type="submit" value="Submit the proof" />
-          <span style={noteStyle}>(This will send transactions twice)</span>
         </form>
       )
     }
