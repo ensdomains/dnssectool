@@ -2,9 +2,8 @@ import React, { Component } from 'react'
 import DNSRegistrarContract from '../build/contracts/DNSRegistrar.json'
 import ENSRegistryContract from '../build/contracts/ENSRegistry.json'
 import namehash from 'eth-ens-namehash';
-// import ENS from 'ethereum-ens';
-// const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
-const DNSRegistrarJS = require('dnsregistrar');
+import ENS from 'ethereum-ens';
+const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
 
 import getWeb3 from './utils/getWeb3'
 
@@ -19,6 +18,7 @@ class App extends Component {
 
     this.state = {
       domain: 'matoken.xyz',
+      network: null,
       owner:null,
       web3: null,
       accounts:[],
@@ -88,47 +88,66 @@ class App extends Component {
     DNSRegistrar.setProvider(this.state.web3.currentProvider)
     ENSRegistry.setProvider(this.state.web3.currentProvider)
     var registrarjs;
-    var registrar;
     var ensContract;
-    // var ens;
+    var ens;
     var claim;
+    var network = 'network not supported';
 
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.setState({accounts:accounts});
-      DNSRegistrar.deployed().then((_registrar)=>{
-        registrar = _registrar;
-        registrarjs = new DNSRegistrarJS(this.state.web3.currentProvider, registrar.address);
-      }).then(()=>{
-        return ENSRegistry.deployed()
-      }).then((_ensContract)=>{
-        ensContract = _ensContract;
-        // ens = new ENS(this.state.web3.currentProvider, ensContract.address);
-        return registrarjs.claim(this.state.domain);
-      }).then((_claim)=>{
-        claim = _claim;
-        this.setState({claim:claim, dnsFound:claim.found});
-        let text ='has no ETH address set';
-        if(claim.found){
-          text = `has TXT record with a=` + claim.getOwner();
-        } 
-        this.setState({ proofs: [], owner: text })
+      this.state.web3.version.getNetwork((err, netId) =>{
+        console.log('getNetwork', err, netId)
+        if(err){
+          console.log('error', err)
+        }else{
+          switch (netId) {
+            case "1":
+              network = 'mainnet';
+              break
+            case "3":
+              network = 'ropsten';
+              break
+            default:
+              console.log('This is an unknown network.')
+          }
+          console.log('network', network)
+          this.setState({ network:network})
+        }
 
-        claim.result.proofs.map((proof, index)=>{
-          claim.oracle.knownProof(proof).then((proven)=>{
-            this.setState({
-              proofs: this.state.proofs.concat([{name:proof.name, type:proof.type, proof:proven}])
+        ENSRegistry.deployed().then((_ensContract)=>{
+          ensContract = _ensContract;
+          ens = new ENS(this.state.web3.currentProvider, ensContract.address);
+          return ens.owner('xyz')
+        }).then((owner)=>{
+          registrarjs = new DNSRegistrarJS(this.state.web3.currentProvider, owner);
+        }).then(()=>{
+          return registrarjs.claim(this.state.domain);
+        }).then((_claim)=>{
+          claim = _claim;
+          this.setState({claim:claim, dnsFound:claim.found});
+          let text ='has no ETH address set';
+          if(claim.found){
+            text = `has TXT record with a=` + claim.getOwner();
+          } 
+          this.setState({ proofs: [], owner: text })
+  
+          claim.result.proofs.map((proof, index)=>{
+            claim.oracle.knownProof(proof).then((proven)=>{
+              this.setState({
+                proofs: this.state.proofs.concat([{name:proof.name, type:proof.type, proof:proven}])
+              })
             })
           })
-        })
-        // This should also work (but not working for some reason now.
-        // return ens.resolver(this.state.domain).addr();
-        return ensContract.owner.call(namehash.hash(this.state.domain));
-      }).then((ensResult)=>{
-        this.setState({ensAddress:ensResult});
-      }).catch((e)=>{
-        // Do now show error when ENS name is not found
-        console.log('state', this.state)        
-        console.log('error', e)
+          // This should also work (but not working for some reason now.
+          // return ens.resolver(this.state.domain).addr();
+          return ensContract.owner.call(namehash.hash(this.state.domain));
+        }).then((ensResult)=>{
+          this.setState({ensAddress:ensResult});
+        }).catch((e)=>{
+          // Do now show error when ENS name is not found
+          console.log('state', this.state)        
+          console.log('error', e)
+        })  
       })
     })
   }
@@ -158,6 +177,7 @@ class App extends Component {
       <div className="App">
         <nav style={navStyle} className="navbar pure-menu pure-menu-horizontal">
             <a href="#" className="pure-menu-heading pure-menu-link">Claim DNS on ENS Integration Example</a>
+            <label>{this.state.network}</label>
         </nav>
 
         <main className="container">
