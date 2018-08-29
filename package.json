@@ -50,8 +50,8 @@
     "whatwg-fetch": "1.0.0"
   },
   "dependencies": {
-    "@ensdomains/dnsregistrar": "0.0.4",
-    "@ensdomains/dnssec-oracle": "0.0.5",
+    "@ensdomains/dnsregistrar": "0.0.6",
+    "@ensdomains/dnssec-oracle": "0.0.7",
     "@ensdomains/ens": "^0.1.1",
     "dns-packet": "^5.0.2",
     "dotenv": "^2.0.0",
