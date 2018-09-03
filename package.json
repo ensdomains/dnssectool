@@ -1,8 +1,8 @@
 {
-  "name": "react-box",
+  "name": "dnssectool",
   "version": "0.1.0",
   "private": true,
-  "homepage": "http://makoto.github.io/dnssec-ens-example",
+  "homepage": "http://ensdomains.github.io/dnssectool",
   "devDependencies": {
     "autoprefixer": "6.5.1",
     "babel-core": "6.17.0",
