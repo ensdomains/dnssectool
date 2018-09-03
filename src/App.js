@@ -17,7 +17,7 @@ class App extends Component {
     super(props)
 
     this.state = {
-      domain: 'matoken.xyz',
+      domain: null,
       network: null,
       owner:null,
       web3: null,
@@ -176,7 +176,7 @@ class App extends Component {
     return (
       <div className="App">
         <nav style={navStyle} className="navbar pure-menu pure-menu-horizontal">
-            <a href="#" className="pure-menu-heading pure-menu-link">Claim DNS on ENS Integration Example</a>
+            <a href="#" className="pure-menu-heading pure-menu-link">DNS name claim tool</a>
             <label>{this.state.network}</label>
         </nav>
 
