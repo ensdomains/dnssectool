@@ -3,8 +3,8 @@ import DNSRegistrarContract from '../build/contracts/DNSRegistrar.json'
 import ENSRegistryContract from '../build/contracts/ENSRegistry.json'
 import namehash from 'eth-ens-namehash';
 import ENS from 'ethereum-ens';
-const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
-
+// const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
+const DNSRegistrarJS = require('dnsregistrar');
 import getWeb3 from './utils/getWeb3'
 
 import './css/oswald.css'
@@ -132,7 +132,10 @@ class App extends Component {
             text = `has TXT record with a=` + claim.getOwner();
           } 
           this.setState({ proofs: [], owner: text })
-  
+          claim.oracle.getProven(claim.result).then((number)=>{
+            // this should normally say 6 if all _ens.matoken.xyz proof is on DNSSEC Oracle and should say 5 if _ens.matoken.xyz value is updated.
+            console.log('getProven', number)
+          })
           claim.result.proofs.map((proof, index)=>{
             claim.oracle.knownProof(proof).then((proven)=>{
               var toProve = this.state.web3.sha3(proof.rrdata.toString('hex'), {encoding:"hex"}).slice(0,42)
