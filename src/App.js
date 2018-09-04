@@ -121,7 +121,9 @@ class App extends Component {
         }).then((owner)=>{
           registrarjs = new DNSRegistrarJS(this.state.web3.currentProvider, owner);
         }).then(()=>{
-          return registrarjs.claim(this.state.domain);
+          if(this.state.domain){
+            return registrarjs.claim(this.state.domain);
+          }
         }).then((_claim)=>{
           claim = _claim;
           this.setState({claim:claim, dnsFound:claim.found});
