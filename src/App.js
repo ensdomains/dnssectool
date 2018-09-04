@@ -133,8 +133,15 @@ class App extends Component {
   
           claim.result.proofs.map((proof, index)=>{
             claim.oracle.knownProof(proof).then((proven)=>{
+              var toProve = this.state.web3.sha3(proof.rrdata.toString('hex'), {encoding:"hex"}).slice(0,42)
+              let matched;
+              if(toProve == proven){
+                matched = "yes";
+              }else{
+                matched = "no";
+              }
               this.setState({
-                proofs: this.state.proofs.concat([{name:proof.name, type:proof.type, proof:proven}])
+                proofs: this.state.proofs.concat([{index:index, name:proof.name, type:proof.type, proof:proven, toProve:toProve, matched:matched}])
               })
             })
           })
@@ -197,17 +204,23 @@ class App extends Component {
               <h3>On DNSSEC Oracle</h3>
               <table>
                 <tr>
+                  <th>#</th>
                   <th>name</th>
                   <th>type</th> 
-                  <th>proof</th>
+                  <th>proof in DNSSEC Oracle</th>
+                  <th>proof from DNS</th>
+                  <th>matched?</th>
                 </tr>
                 {
-                  this.state.proofs.map((proof, i) => {
+                  this.state.proofs.sort((a,b)=>{return a.index - b.index}).map((proof, i) => {
                     return (
                       <tr>
+                        <td>{proof.index}</td>
                         <td>{proof.name}</td>
                         <td>{proof.type}</td>
                         <td>{proof.proof}</td>
+                        <td>{proof.toProve}</td>
+                        <td>{proof.matched }</td>
                       </tr>
                     )
                   })
