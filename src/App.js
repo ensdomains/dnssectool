@@ -141,7 +141,7 @@ class App extends Component {
                 matched = "no";
               }
               this.setState({
-                proofs: this.state.proofs.concat([{index:index, name:proof.name, type:proof.type, proof:proven, toProve:toProve, matched:matched}])
+                proofs: this.state.proofs.concat([{index:index + 1, name:proof.name, type:proof.type, proof:proven, toProve:toProve, matched:matched}])
               })
             })
           })
