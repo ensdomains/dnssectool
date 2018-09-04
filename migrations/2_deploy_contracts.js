@@ -1,4 +1,4 @@
-var DNSSEC            = artifacts.require("@ensdomains/dnssec-oracle/DNSSEC.sol");
+var DNSSEC            = artifacts.require("@ensdomains/dnssec-oracle/DNSSECImpl.sol");
 var rsasha1           = artifacts.require("@ensdomains/dnssec-oracle/RSASHA1Algorithm.sol");
 var rsasha256         = artifacts.require("@ensdomains/dnssec-oracle/RSASHA256Algorithm.sol");
 var sha1              = artifacts.require("@ensdomains/dnssec-oracle/SHA1Digest.sol");

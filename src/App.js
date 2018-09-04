@@ -4,6 +4,7 @@ import ENSRegistryContract from '../build/contracts/ENSRegistry.json'
 import namehash from 'eth-ens-namehash';
 import ENS from 'ethereum-ens';
 const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
+import Promise from 'promise';
 
 import getWeb3 from './utils/getWeb3'
 
@@ -42,9 +43,6 @@ class App extends Component {
       this.setState({
         web3: results.web3
       })
-
-      // Instantiate contract once web3 provided.
-      this.instantiateContract()
     })
     .catch(() => {
       console.log('Error finding web3.')
@@ -114,13 +112,10 @@ class App extends Component {
           this.setState({ network:network})
         }
 
-        ENSRegistry.deployed().then((_ensContract)=>{
-          ensContract = _ensContract;
-          ens = new ENS(this.state.web3.currentProvider, ensContract.address);
-          return ens.owner('xyz')
-        }).then((owner)=>{
-          registrarjs = new DNSRegistrarJS(this.state.web3.currentProvider, owner);
-        }).then(()=>{
+        var provider = this.state.web3.currentProvider;
+        ens = new ENS(provider);
+        return ens.owner('xyz').then((owner)=>{
+          registrarjs = new DNSRegistrarJS(provider, owner);
           return registrarjs.claim(this.state.domain);
         }).then((_claim)=>{
           claim = _claim;
@@ -128,36 +123,33 @@ class App extends Component {
           let text ='has no ETH address set';
           if(claim.found){
             text = `has TXT record with a=` + claim.getOwner();
-          } 
-          this.setState({ proofs: [], owner: text })
-  
-          claim.result.proofs.map((proof, index)=>{
-            claim.oracle.knownProof(proof).then((proven)=>{
-              this.setState({
-                proofs: this.state.proofs.concat([{name:proof.name, type:proof.type, proof:proven}])
-              })
-            })
-          })
+          }
+          this.setState({ proofs: [], owner: text });
+
+          return Promise.all(claim.result.proofs.map((proof) => claim.oracle.knownProof(proof))).then((provens)=>{
+             return claim.result.proofs.map((proof, i) => {
+                 return {name: proof.name, type: proof.type, proof: provens[i]};
+             })
+          });
+      }).then((proofs) =>{
+          this.setState({
+              proofs: proofs
+          });
           // This should also work (but not working for some reason now.
           // return ens.resolver(this.state.domain).addr();
-          return ensContract.owner.call(namehash.hash(this.state.domain));
+          return ens.owner(this.state.domain);
         }).then((ensResult)=>{
           this.setState({ensAddress:ensResult});
         }).catch((e)=>{
           // Do now show error when ENS name is not found
-          console.log('state', this.state)        
+          console.log('state', this.state)
           console.log('error', e)
-        })  
+        })
       })
     })
   }
 
   render() {
-    var noteStyle ={
-      margin: '5px',
-      fontSize:'small'
-    }
-
     if(this.state.domain){
       var dnsEntry = ('_ens.' + this.state.domain)
     }
@@ -198,7 +190,7 @@ class App extends Component {
               <table>
                 <tr>
                   <th>name</th>
-                  <th>type</th> 
+                  <th>type</th>
                   <th>proof</th>
                 </tr>
                 {
@@ -216,7 +208,7 @@ class App extends Component {
               <h3>On ENS</h3>
               <p>
                 The ENS Ethereum Address for this name is {this.state.ensAddress}
-              </p>              
+              </p>
               {submitProofForm}
             </div>
           </div>
