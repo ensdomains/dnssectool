@@ -1,7 +1,4 @@
 import React, { Component } from 'react'
-import DNSRegistrarContract from '../build/contracts/DNSRegistrar.json'
-import ENSRegistryContract from '../build/contracts/ENSRegistry.json'
-import namehash from 'eth-ens-namehash';
 import ENS from 'ethereum-ens';
 const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
 import Promise from 'promise';
@@ -75,10 +72,6 @@ class App extends Component {
 
   instantiateContract(){
     const contract = require('truffle-contract')
-    const DNSRegistrar = contract(DNSRegistrarContract);
-    const ENSRegistry = contract(ENSRegistryContract);
-    DNSRegistrar.setProvider(this.state.web3.currentProvider)
-    ENSRegistry.setProvider(this.state.web3.currentProvider)
     var registrarjs;
     var ensContract;
     var ens;
