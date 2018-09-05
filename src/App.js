@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import ENS from 'ethereum-ens';
-const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
+// const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
+const DNSRegistrarJS = require('dnsregistrar');
 import Promise from 'promise';
 
 import getWeb3 from './utils/getWeb3'
@@ -88,7 +89,7 @@ class App extends Component {
     }).then((_claim)=>{
       console.log('claim',_claim);
       claim = _claim;
-      this.setState({claim:claim, dnsFound:claim.found});
+      this.setState({claim:claim, dnsFound:claim.found || claim.nsec});
       let text ='has no ETH address set';
       if(claim.found){
         text = `has TXT record with a=` + claim.getOwner();
