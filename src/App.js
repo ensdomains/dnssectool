@@ -141,9 +141,9 @@ class App extends Component {
               var toProve = this.state.web3.sha3(proof.rrdata.toString('hex'), {encoding:"hex"}).slice(0,42)
               let matched;
               if(toProve == proven){
-                matched = "yes";
+                matched = "✅ ";
               }else{
-                matched = "no";
+                matched = "❎";
               }
               this.setState({
                 proofs: this.state.proofs.concat([{index:index + 1, name:proof.name, type:proof.type, proof:proven, toProve:toProve, matched:matched}])
@@ -212,8 +212,6 @@ class App extends Component {
                   <th>#</th>
                   <th>name</th>
                   <th>type</th> 
-                  <th>proof in DNSSEC Oracle</th>
-                  <th>proof from DNS</th>
                   <th>matched?</th>
                 </tr>
                 {
@@ -223,9 +221,13 @@ class App extends Component {
                         <td>{proof.index}</td>
                         <td>{proof.name}</td>
                         <td>{proof.type}</td>
-                        <td>{proof.proof}</td>
-                        <td>{proof.toProve}</td>
-                        <td>{proof.matched }</td>
+                        <td style={{textAlign:'center'}}>
+                        <div className="tooltip">{proof.matched}
+                          <span className="tooltiptext">
+                            DNS proof is {proof.toProve} while DNSSEC Oracle has {proof.proof}
+                          </span>
+                        </div>
+                        </td>
                       </tr>
                     )
                   })
