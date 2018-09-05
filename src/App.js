@@ -43,6 +43,7 @@ class App extends Component {
       this.setState({
         web3: results.web3
       })
+      this.instantiateNetwork();
     })
     .catch(() => {
       console.log('Error finding web3.')
@@ -72,14 +73,7 @@ class App extends Component {
     event.preventDefault();
   }
 
-  instantiateContract() {
-    /*
-     * SMART CONTRACT EXAMPLE
-     *
-     * Normally these functions would be called in the context of a
-     * state management library, but for convenience I've placed them here.
-     */
-
+  instantiateContract(){
     const contract = require('truffle-contract')
     const DNSRegistrar = contract(DNSRegistrarContract);
     const ENSRegistry = contract(ENSRegistryContract);
@@ -89,6 +83,69 @@ class App extends Component {
     var ensContract;
     var ens;
     var claim;
+
+    var provider = this.state.web3.currentProvider;
+    ens = new ENS(provider);
+    let tld = this.state.domain.split('.').reverse()[0];
+    return ens.owner(tld).then((owner)=>{
+      console.log('owner', owner);
+      registrarjs = new DNSRegistrarJS(provider, owner);
+      console.log('this.state.domain', this.state.domain);
+      return registrarjs.claim(this.state.domain);
+    }).then((_claim)=>{
+      console.log('claim',_claim);
+      claim = _claim;
+      this.setState({claim:claim, dnsFound:claim.found});
+      let text ='has no ETH address set';
+      if(claim.found){
+        text = `has TXT record with a=` + claim.getOwner();
+      }
+      this.setState({ proofs: [], owner: text });
+
+      return Promise.all(claim.result.proofs.map((proof) => claim.oracle.knownProof(proof))).then((provens)=>{
+         return claim.result.proofs.map((proof, i) => {
+
+          var toProve = this.state.web3.sha3(proof.rrdata.toString('hex'), {encoding:"hex"}).slice(0,42)
+          let matched;
+          if(toProve == provens[i]){
+            matched = "✅ ";
+          }else{
+            matched = "❎";
+          }
+          return {
+            index: i+1,
+            name: proof.name,
+            type: proof.type,
+            proof: provens[i],
+            toProve:toProve,
+            matched:matched
+          };
+         })
+      });
+    }).then((proofs) =>{
+      this.setState({
+          proofs: proofs
+      });
+      // This should also work (but not working for some reason now.
+      // return ens.resolver(this.state.domain).addr();
+      return ens.owner(this.state.domain);
+    }).then((ensResult)=>{
+      this.setState({ensAddress:ensResult});
+    }).catch((e)=>{
+      // Do now show error when ENS name is not found
+      console.log('state', this.state)
+      console.log('error', e)
+    })
+  }
+
+  instantiateNetwork() {
+    /*
+     * SMART CONTRACT EXAMPLE
+     *
+     * Normally these functions would be called in the context of a
+     * state management library, but for convenience I've placed them here.
+     */
+
     var network = 'network not supported';
 
     this.state.web3.eth.getAccounts((error, accounts) => {
@@ -111,55 +168,6 @@ class App extends Component {
           console.log('network', network)
           this.setState({ network:network})
         }
-
-        var provider = this.state.web3.currentProvider;
-        ens = new ENS(provider);
-        return ens.owner('xyz').then((owner)=>{
-          registrarjs = new DNSRegistrarJS(provider, owner);
-          return registrarjs.claim(this.state.domain);
-        }).then((_claim)=>{
-          claim = _claim;
-          this.setState({claim:claim, dnsFound:claim.found});
-          let text ='has no ETH address set';
-          if(claim.found){
-            text = `has TXT record with a=` + claim.getOwner();
-          }
-          this.setState({ proofs: [], owner: text });
-
-          return Promise.all(claim.result.proofs.map((proof) => claim.oracle.knownProof(proof))).then((provens)=>{
-             return claim.result.proofs.map((proof, i) => {
-
-              var toProve = this.state.web3.sha3(proof.rrdata.toString('hex'), {encoding:"hex"}).slice(0,42)
-              let matched;
-              if(toProve == provens[i]){
-                matched = "✅ ";
-              }else{
-                matched = "❎";
-              }
-              return {
-                index: i+1,
-                name: proof.name,
-                type: proof.type,
-                proof: provens[i],
-                toProve:toProve,
-                matched:matched
-              };
-             })
-          });
-      }).then((proofs) =>{
-          this.setState({
-              proofs: proofs
-          });
-          // This should also work (but not working for some reason now.
-          // return ens.resolver(this.state.domain).addr();
-          return ens.owner(this.state.domain);
-        }).then((ensResult)=>{
-          this.setState({ensAddress:ensResult});
-        }).catch((e)=>{
-          // Do now show error when ENS name is not found
-          console.log('state', this.state)
-          console.log('error', e)
-        })
       })
     })
   }
