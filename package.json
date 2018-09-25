@@ -49,7 +49,7 @@
     "whatwg-fetch": "1.0.0"
   },
   "dependencies": {
-    "@ensdomains/dnsregistrar": "0.0.8",
+    "@ensdomains/dnsregistrar": "0.0.9",
     "@ensdomains/dnssec-oracle": "0.0.7",
     "@ensdomains/ens": "^0.1.1",
     "dns-packet": "^5.0.2",

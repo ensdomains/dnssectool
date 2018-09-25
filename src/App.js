@@ -1,12 +1,8 @@
 import React, { Component } from 'react'
-import DNSRegistrarContract from '../build/contracts/DNSRegistrar.json'
-import ENSRegistryContract from '../build/contracts/ENSRegistry.json'
-import namehash from 'eth-ens-namehash';
 import ENS from 'ethereum-ens';
-const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
 import Promise from 'promise';
-
 import getWeb3 from './utils/getWeb3'
+const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
 
 import './css/oswald.css'
 import './css/open-sans.css'
@@ -26,6 +22,7 @@ class App extends Component {
       proofs:[],
       claim: null,
       dnsFound:false,
+      nsecFound:false,
       provenAddress:false
     }
 
@@ -54,6 +51,7 @@ class App extends Component {
     this.setState({
       domain: event.target.value,
       dnsFound:false,
+      nsecFound:false,
       proofs:[],
       ensAddress:'0x0',
       owner:null
@@ -67,6 +65,9 @@ class App extends Component {
 
   handleSubmitProof(event) {
     var self = this;
+    if(!this.state.accounts[0]){
+      throw('Account not set')
+    }
     this.state.claim.submit({ from: this.state.accounts[0], gas:3000000 }).then((trx)=>{
       self.instantiateContract();
     })
@@ -74,13 +75,7 @@ class App extends Component {
   }
 
   instantiateContract(){
-    const contract = require('truffle-contract')
-    const DNSRegistrar = contract(DNSRegistrarContract);
-    const ENSRegistry = contract(ENSRegistryContract);
-    DNSRegistrar.setProvider(this.state.web3.currentProvider)
-    ENSRegistry.setProvider(this.state.web3.currentProvider)
     var registrarjs;
-    var ensContract;
     var ens;
     var claim;
 
@@ -88,26 +83,22 @@ class App extends Component {
     ens = new ENS(provider);
     let tld = this.state.domain.split('.').reverse()[0];
     return ens.owner(tld).then((owner)=>{
-      console.log('owner', owner);
       registrarjs = new DNSRegistrarJS(provider, owner);
-      console.log('this.state.domain', this.state.domain);
       return registrarjs.claim(this.state.domain);
     }).then((_claim)=>{
-      console.log('claim',_claim);
       claim = _claim;
-      this.setState({claim:claim, dnsFound:claim.found});
+      this.setState({claim:claim, dnsFound:claim.found, nsecFound:claim.nsec});
       let text ='has no ETH address set';
       if(claim.found){
         text = `has TXT record with a=` + claim.getOwner();
       }
       this.setState({ proofs: [], owner: text });
-
       return Promise.all(claim.result.proofs.map((proof) => claim.oracle.knownProof(proof))).then((provens)=>{
          return claim.result.proofs.map((proof, i) => {
 
           var toProve = this.state.web3.sha3(proof.rrdata.toString('hex'), {encoding:"hex"}).slice(0,42)
           let matched;
-          if(toProve == provens[i]){
+          if(toProve === provens[i]){
             matched = "✅ ";
           }else{
             matched = "❎";
@@ -123,11 +114,39 @@ class App extends Component {
          })
       });
     }).then((proofs) =>{
+      if(this.state.nsecFound){
+        let ensSubdomain = '_ens.' + this.state.domain;
+        return claim.oracle.knownProof({name:ensSubdomain, type:'TXT'})
+          .then((proven)=>{
+            console.log('proven for TXT', ensSubdomain, proven)
+            let matched;
+            if(parseInt(proven) === 0){
+              matched = "✅ ";
+            }else{
+              matched = "❎";
+            }
+            // Hide nsec data
+            proofs = proofs.filter((proof)=>{
+              return proof.type != 'NSEC' && proof.type != 'NSEC3'}
+            )
+            proofs.push({
+              index:proofs.length + 1,
+              name: ensSubdomain,
+              type: 'TXT',
+              toProve: '0x0000000000000000000000000000000000000000',
+              proof: proven,
+              matched: matched
+            })
+            return proofs;
+          })
+      }else{
+        return proofs;
+      }
+    }).then((proofs) =>{
       this.setState({
           proofs: proofs
       });
-      // This should also work (but not working for some reason now.
-      // return ens.resolver(this.state.domain).addr();
+      console.log('ens owner of ', this.state.domain)
       return ens.owner(this.state.domain);
     }).then((ensResult)=>{
       this.setState({ensAddress:ensResult});
@@ -176,7 +195,7 @@ class App extends Component {
     if(this.state.domain){
       var dnsEntry = ('_ens.' + this.state.domain)
     }
-    if(this.state.dnsFound){
+    if(this.state.dnsFound || this.state.nsecFound){
       var submitProofForm = (
         <form onSubmit={this.handleSubmitProof}>
           <input type="submit" value="Submit the proof" />
