@@ -8,6 +8,7 @@ import EnableDNSSEC from './components/EnableDNSSEC';
 import AddText from './components/AddText';
 import Submit from './components/Submit';
 import Done from './components/Done';
+import Error from './components/Error';
 import Navigation from './components/Navigation';
 import Mode from './components/Mode';
 import Advanced from './components/Advanced';
@@ -26,7 +27,8 @@ const WizardComponents = [
   EnableDNSSEC,
   AddText,
   Submit,
-  Done
+  Done,
+  Error
 ]
 
 // step1 : there are no proofs => "Enter domain"
@@ -37,12 +39,10 @@ const WizardComponents = [
 
 function getStage(state){
   let txt = findType(state.proofs, 'TXT');
-  console.log('state', state);
-  // debugger;
-  if(state.error){
-    return 2;
-  }else if(state.proofs.length == 0){
+  if(!state.claim){
     return 1;
+  } else if (!state.found && !state.nsecFound){
+    return 2;
   } else if (!txt){
     return 3;
   } else if (txt.matched != "✅"){
@@ -64,6 +64,9 @@ class App extends Component {
     this.handleReset = this.handleReset.bind(this);
     this.handleToggleWizard = this.handleToggleWizard.bind(this);
     this.state = {
+      tld:false,
+      domainNotSupported:false,
+      tldOwner:0,
       wizard:true,
       domain: null,
       network: null,
@@ -110,7 +113,9 @@ class App extends Component {
     this.setState({
       domain: null,
       proofs: [],
-      error:null
+      error:null,
+      claim:null,
+      domainNotSupported:false
     });
   }
 
@@ -150,48 +155,68 @@ class App extends Component {
     var provider = this.state.web3.currentProvider;
     ens = new ENS(provider);
     let tld = this.state.domain.split('.').reverse()[0];
-    return ens.owner(tld).then((owner)=>{
-      registrarjs = new DNSRegistrarJS(provider, owner);
-      console.log(0)
-      return registrarjs.claim(this.state.domain);
+    return ens.owner(tld).then((tldOwner)=>{
+      registrarjs = new DNSRegistrarJS(provider, tldOwner);
+      this.setState({tldOwner:tldOwner});
+      if(parseInt(tldOwner) == 0 || tld == 'eth' || tld == 'test'){
+        this.setState({
+          domainNotSupported:true,
+          tld:tld,
+          message:`".${tld} is not supported"`
+        });
+        return false;
+      }
+      return registrarjs.claim(this.state.domain)
     }).then((_claim)=>{
-      console.log(1)
+      if(!_claim) return false;
       claim = _claim;
+
       this.setState({claim:claim, dnsFound:claim.found, nsecFound:claim.nsec});
       let text ='has no ETH address set';
       if(claim.found){
         text = `has TXT record with a=` + claim.getOwner();
       }
       this.setState({ proofs: [], owner: text });
-      return Promise.all(claim.result.proofs.map((proof) => claim.oracle.knownProof(proof))).then((provens)=>{
-         return claim.result.proofs.map((proof, i) => {
-          var toProve = this.state.web3.sha3(proof.rrdata.toString('hex'), {encoding:"hex"}).slice(0,42)
-          let matched;
-          if(toProve === provens[i]){
-            matched = "✅";
-          }else{
-            matched = "❎";
-          }
-          return {
-            index: i+1,
-            name: proof.name,
-            type: proof.type,
-            proof: provens[i],
-            toProve:toProve,
-            matched:matched
-          };
-         })
-      });
+      if(claim.result.proofs){
+        return Promise.all(claim.result.proofs.map((proof) => claim.oracle.knownProof(proof))).then((provens)=>{
+          console.log('provens', provens)
+           return claim.result.proofs.map((proof, i) => {
+            var toProve = this.state.web3.sha3(proof.rrdata.toString('hex'), {encoding:"hex"}).slice(0,42)
+            let matched;
+            if(toProve === provens[i]){
+              matched = "✅";
+            }else{
+              matched = "❎";
+            }
+            return {
+              index: i+1,
+              name: proof.name,
+              type: proof.type,
+              proof: provens[i],
+              toProve:toProve,
+              matched:matched
+            };
+           })
+        });  
+      }else{
+        return [];
+      }
     }).then((proofs) =>{
+      if(!proofs) return false;
+
       this.setState({
           proofs: proofs
       });
       console.log('ens owner of ', this.state.domain)
-      return ens.owner(this.state.domain);
+      if (parseInt(this.state.tldOwner) != 0){
+        return ens.owner(this.state.domain);
+      }
     }).then((ensResult)=>{
       this.setState({ensAddress:ensResult});
-    }).catch((e)=>{
-      this.setState({error:e.message})
+    })
+    .catch((e)=>{
+      let message = 'Oops. Looks like you encountered some error';
+      this.setState({error:e.message, message:message})
       console.log('error', e)
     })
   }

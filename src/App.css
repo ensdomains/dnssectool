@@ -156,3 +156,9 @@ ul.mode li a:hover {
   color: #01447e;
   text-decoration: underline;
 }
+
+div.error{
+  margin: 10px;
+  border: 1px solid red;
+  padding: 10px;
+}
