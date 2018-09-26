@@ -3,12 +3,23 @@ import React, { Component } from 'react'
 class List extends Component {
   render() {
     let style = {};
+    let list;
     if(this.props.active){
-      style.backgroundColor = 'red';
+      style.border = '3px solid grey';
+      style.padding = '3px 6px';
     }
-    return (
-      <li style={style}>{this.props.title}</li>
-    )
+    if(this.props.home){
+      list = (
+        <li>
+          <a href="#" onClick={this.props.handleReset.bind(this)} >
+            <span style={style} >{this.props.title}</span>
+          </a>
+        </li>
+      )
+    }else{
+      list = (<li><span style={style} >{this.props.title}</span></li>)
+    }
+    return list;
   }
 }
 
@@ -21,11 +32,11 @@ class Navigation extends Component {
   render() {
     return (
         <ul className="breadcrumb">
-          <List title="Enter Domain" active={this.props.step == 1} />
+          <List title="Enter Domain" active={this.props.step == 1} home={true} handleReset={this.props.handleReset} />
           <List title="Enable DNSSEC" active={this.props.step == 2} />
           <List title="Add Text" active={this.props.step == 3} />
           <List title="Submit Proof" active={this.props.step == 4} />
-          <List title="Done" active={this.props.step == 5} />
+          <List title="Complete" active={this.props.step == 5} />
         </ul>
     )
   }

@@ -60,6 +60,7 @@ class App extends Component {
     this.handleChange = this.handleChange.bind(this);
     this.handleLookup = this.handleLookup.bind(this);
     this.handleSubmitProof = this.handleSubmitProof.bind(this);
+    this.handleReset = this.handleReset.bind(this);
 
     this.state = {
       domain: null,
@@ -75,7 +76,8 @@ class App extends Component {
       error:null,
       handleLookup:this.handleLookup,
       handleSubmitProof:this.handleSubmitProof,
-      handleChange:this.handleChange
+      handleChange:this.handleChange,
+      handleReset:this.handleReset
     }
   }
 
@@ -93,6 +95,15 @@ class App extends Component {
     .catch(() => {
       console.log('Error finding web3.')
     })
+  }
+
+  handleReset(event) {
+    console.log('handleReset')
+    this.setState({
+      domain: null,
+      proofs: [],
+      error:null
+    });
   }
 
   handleChange(event) {
@@ -230,11 +241,9 @@ class App extends Component {
 
           <div className="pure-g">
             <div className="pure-u-1-1">
-              <h3>Stage</h3>
-              <Navigation step={getStage(this.state)} />
+              <Navigation {...this.state } step={getStage(this.state)} />
               <WizardComponent {...this.state } />
-              {getStage(this.state)}
-              <Advanced {...this.state} />
+              {/* <Advanced {...this.state} /> */}
             </div>
           </div>
         </main>
