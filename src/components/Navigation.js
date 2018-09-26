@@ -31,13 +31,13 @@ class List extends Component {
 class Navigation extends Component {
   render() {
     return (
-        <ul className="breadcrumb">
-          <List title="Enter Domain" active={this.props.step == 1} home={true} handleReset={this.props.handleReset} />
-          <List title="Enable DNSSEC" active={this.props.step == 2} />
-          <List title="Add Text" active={this.props.step == 3} />
-          <List title="Submit Proof" active={this.props.step == 4} />
-          <List title="Complete" active={this.props.step == 5} />
-        </ul>
+          <ul className="breadcrumb">
+            <List title="Enter Domain" active={this.props.step == 1} home={true} handleReset={this.props.handleReset} />
+            <List title="Enable DNSSEC" active={this.props.step == 2} />
+            <List title="Add Text" active={this.props.step == 3} />
+            <List title="Submit Proof" active={this.props.step == 4} />
+            <List title="Complete" active={this.props.step == 5} />
+          </ul>        
     )
   }
 }

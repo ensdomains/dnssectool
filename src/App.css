@@ -136,3 +136,23 @@ ul.breadcrumb li a:hover {
   color: #01447e;
   text-decoration: underline;
 }
+
+ul.mode {
+  display: inline;
+  padding: 10px;
+}
+ul.mode li {
+  display: inline;
+}
+ul.mode li+li:before {
+  padding: 8px;
+  content: "|";
+}
+ul.mode li a {
+  color: #0275d8;
+  /* text-decoration: none; */
+}
+ul.mode li a:hover {
+  color: #01447e;
+  text-decoration: underline;
+}

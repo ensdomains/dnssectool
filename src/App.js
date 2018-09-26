@@ -9,6 +9,7 @@ import AddText from './components/AddText';
 import Submit from './components/Submit';
 import Done from './components/Done';
 import Navigation from './components/Navigation';
+import Mode from './components/Mode';
 import Advanced from './components/Advanced';
 
 import './css/oswald.css'
@@ -61,8 +62,9 @@ class App extends Component {
     this.handleLookup = this.handleLookup.bind(this);
     this.handleSubmitProof = this.handleSubmitProof.bind(this);
     this.handleReset = this.handleReset.bind(this);
-
+    this.handleToggleWizard = this.handleToggleWizard.bind(this);
     this.state = {
+      wizard:true,
       domain: null,
       network: null,
       owner:null,
@@ -77,7 +79,8 @@ class App extends Component {
       handleLookup:this.handleLookup,
       handleSubmitProof:this.handleSubmitProof,
       handleChange:this.handleChange,
-      handleReset:this.handleReset
+      handleReset:this.handleReset,
+      handleToggleWizard:this.handleToggleWizard
     }
   }
 
@@ -97,8 +100,13 @@ class App extends Component {
     })
   }
 
+  handleToggleWizard(event) {
+    this.setState({
+      wizard: !this.state.wizard
+    });
+  }
+
   handleReset(event) {
-    console.log('handleReset')
     this.setState({
       domain: null,
       proofs: [],
@@ -229,21 +237,31 @@ class App extends Component {
     var navStyle = {
       background:'#009DFF'
     }
+    let Panel;
+    if(this.state.wizard){
+      Panel = (
+        <div>
+          <Navigation {...this.state } step={getStage(this.state)} />
+          <WizardComponent {...this.state } />
+        </div>
+      )
+    }else{
+      Panel = <Advanced {...this.state} />
+    }
     
     return (
       <div className="App">
         <nav style={navStyle} className="navbar pure-menu pure-menu-horizontal">
             <a href="#" className="pure-menu-heading pure-menu-link">DNS name claim tool</a>
             <label>{this.state.network}</label>
+            <Mode {...this.state } />
         </nav>
 
         <main className="container">
 
           <div className="pure-g">
             <div className="pure-u-1-1">
-              <Navigation {...this.state } step={getStage(this.state)} />
-              <WizardComponent {...this.state } />
-              {/* <Advanced {...this.state} /> */}
+              { Panel }
             </div>
           </div>
         </main>
