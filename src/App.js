@@ -1,17 +1,65 @@
 import React, { Component } from 'react'
 import ENS from 'ethereum-ens';
 import Promise from 'promise';
-import getWeb3 from './utils/getWeb3'
+import getWeb3 from './utils/getWeb3';
 const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
+import EnterDomain from './components/EnterDomain';
+import EnableDNSSEC from './components/EnableDNSSEC';
+import AddText from './components/AddText';
+import Submit from './components/Submit';
+import Done from './components/Done';
+import Navigation from './components/Navigation';
+import Advanced from './components/Advanced';
 
 import './css/oswald.css'
 import './css/open-sans.css'
 import './css/pure-min.css'
 import './App.css'
 
+function findType(proofs, type){
+  return proofs.find((p)=>{return p.type == type});
+}
+
+const WizardComponents = [
+  EnterDomain,
+  EnableDNSSEC,
+  AddText,
+  Submit,
+  Done
+]
+
+// step1 : there are no proofs => "Enter domain"
+// step2 : proofs have no TXT entry nor NSEC entry => "Enable DNSSEC"
+// step3 : proofs have no TXT entry with valid ethereum address => "Add TXT record"
+// step4 : proofs have valid TXT entry but the entry does not match on DNSSEC Oracle => "Submit proof"
+// step5 : proofs have valid TXT entry but the entry does exist on DNSSEC Oracle => "All set"
+
+function getStage(state){
+  let txt = findType(state.proofs, 'TXT');
+  console.log('state', state);
+  // debugger;
+  if(state.error){
+    return 2;
+  }else if(state.proofs.length == 0){
+    return 1;
+  } else if (!txt){
+    return 3;
+  } else if (txt.matched != "✅"){
+    return 4;
+  } else if (txt.matched == "✅"){
+    return 5;
+  }else{
+    // anything else;
+    return 6;
+  }
+}
+
 class App extends Component {
   constructor(props) {
     super(props)
+    this.handleChange = this.handleChange.bind(this);
+    this.handleLookup = this.handleLookup.bind(this);
+    this.handleSubmitProof = this.handleSubmitProof.bind(this);
 
     this.state = {
       domain: null,
@@ -23,12 +71,12 @@ class App extends Component {
       claim: null,
       dnsFound:false,
       nsecFound:false,
-      provenAddress:false
+      provenAddress:false,
+      error:null,
+      handleLookup:this.handleLookup,
+      handleSubmitProof:this.handleSubmitProof,
+      handleChange:this.handleChange
     }
-
-    this.handleChange = this.handleChange.bind(this);
-    this.handleLookup = this.handleLookup.bind(this);
-    this.handleSubmitProof = this.handleSubmitProof.bind(this);
   }
 
   componentWillMount() {
@@ -54,7 +102,8 @@ class App extends Component {
       nsecFound:false,
       proofs:[],
       ensAddress:'0x0',
-      owner:null
+      owner:null,
+      error:null
     });
   }
 
@@ -84,8 +133,10 @@ class App extends Component {
     let tld = this.state.domain.split('.').reverse()[0];
     return ens.owner(tld).then((owner)=>{
       registrarjs = new DNSRegistrarJS(provider, owner);
+      console.log(0)
       return registrarjs.claim(this.state.domain);
     }).then((_claim)=>{
+      console.log(1)
       claim = _claim;
       this.setState({claim:claim, dnsFound:claim.found, nsecFound:claim.nsec});
       let text ='has no ETH address set';
@@ -95,11 +146,10 @@ class App extends Component {
       this.setState({ proofs: [], owner: text });
       return Promise.all(claim.result.proofs.map((proof) => claim.oracle.knownProof(proof))).then((provens)=>{
          return claim.result.proofs.map((proof, i) => {
-
           var toProve = this.state.web3.sha3(proof.rrdata.toString('hex'), {encoding:"hex"}).slice(0,42)
           let matched;
           if(toProve === provens[i]){
-            matched = "✅ ";
+            matched = "✅";
           }else{
             matched = "❎";
           }
@@ -114,35 +164,6 @@ class App extends Component {
          })
       });
     }).then((proofs) =>{
-      if(this.state.nsecFound){
-        let ensSubdomain = '_ens.' + this.state.domain;
-        return claim.oracle.knownProof({name:ensSubdomain, type:'TXT'})
-          .then((proven)=>{
-            console.log('proven for TXT', ensSubdomain, proven)
-            let matched;
-            if(parseInt(proven) === 0){
-              matched = "✅ ";
-            }else{
-              matched = "❎";
-            }
-            // Hide nsec data
-            proofs = proofs.filter((proof)=>{
-              return proof.type != 'NSEC' && proof.type != 'NSEC3'}
-            )
-            proofs.push({
-              index:proofs.length + 1,
-              name: ensSubdomain,
-              type: 'TXT',
-              toProve: '0x0000000000000000000000000000000000000000',
-              proof: proven,
-              matched: matched
-            })
-            return proofs;
-          })
-      }else{
-        return proofs;
-      }
-    }).then((proofs) =>{
       this.setState({
           proofs: proofs
       });
@@ -151,8 +172,7 @@ class App extends Component {
     }).then((ensResult)=>{
       this.setState({ensAddress:ensResult});
     }).catch((e)=>{
-      // Do now show error when ENS name is not found
-      console.log('state', this.state)
+      this.setState({error:e.message})
       console.log('error', e)
     })
   }
@@ -192,21 +212,13 @@ class App extends Component {
   }
 
   render() {
-    if(this.state.domain){
-      var dnsEntry = ('_ens.' + this.state.domain)
-    }
-    if(this.state.dnsFound || this.state.nsecFound){
-      var submitProofForm = (
-        <form onSubmit={this.handleSubmitProof}>
-          <input type="submit" value="Submit the proof" />
-        </form>
-      )
-    }
+    let WizardComponent = WizardComponents[getStage(this.state) - 1];
+    console.log('stage', getStage(this.state));
 
     var navStyle = {
       background:'#009DFF'
     }
-
+    
     return (
       <div className="App">
         <nav style={navStyle} className="navbar pure-menu pure-menu-horizontal">
@@ -218,48 +230,11 @@ class App extends Component {
 
           <div className="pure-g">
             <div className="pure-u-1-1">
-              <h3>Domain</h3>
-              <form onSubmit={this.handleLookup}>
-              <input type="text" value={this.state.domain} onChange={this.handleChange} required />
-              <input type="submit" value="Lookup" />
-              <h3>On DNS</h3>
-              <p>
-                <a href={`http://dnsviz.net/d/_ens.${this.state.domain}/dnssec`} target="_blank" >
-                  {dnsEntry}
-                </a> {this.state.owner}</p>
-              </form>
-              <h3>On DNSSEC Oracle</h3>
-              <table>
-                <tr>
-                  <th>#</th>
-                  <th>name</th>
-                  <th>type</th> 
-                  <th>matched?</th>
-                </tr>
-                {
-                  this.state.proofs.sort((a,b)=>{return a.index - b.index}).map((proof, i) => {
-                    return (
-                      <tr>
-                        <td>{proof.index}</td>
-                        <td>{proof.name}</td>
-                        <td>{proof.type}</td>
-                        <td style={{textAlign:'center'}}>
-                        <div className="tooltip">{proof.matched}
-                          <span className="tooltiptext">
-                            DNS proof is {proof.toProve} while DNSSEC Oracle has {proof.proof}
-                          </span>
-                        </div>
-                        </td>
-                      </tr>
-                    )
-                  })
-                }
-              </table>
-              <h3>On ENS</h3>
-              <p>
-                The ENS Ethereum Address for this name is {this.state.ensAddress}
-              </p>
-              {submitProofForm}
+              <h3>Stage</h3>
+              <Navigation step={getStage(this.state)} />
+              <WizardComponent {...this.state } />
+              {getStage(this.state)}
+              <Advanced {...this.state} />
             </div>
           </div>
         </main>
