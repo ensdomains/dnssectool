@@ -41,7 +41,7 @@ function getStage(state){
   let txt = findType(state.proofs, 'TXT');
   if(!state.claim){
     return 1;
-  } else if (!state.found && !state.nsecFound){
+  } else if (!state.dnsFound && !state.nsecFound){
     return 2;
   } else if (!txt){
     return 3;
