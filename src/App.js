@@ -45,7 +45,7 @@ function getStage(state){
     return 2;
   } else if (!txt){
     return 3;
-  } else if (txt.matched != "✅"){
+  } else if (txt.matched != "✅" || parseInt(state.ensAddress) == 0){
     return 4;
   } else if (txt.matched == "✅"){
     return 5;
