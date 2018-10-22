@@ -197,7 +197,7 @@ class App extends Component {
               matched:matched
             };
            })
-        });  
+        });
       }else{
         return [];
       }
@@ -273,7 +273,7 @@ class App extends Component {
     }else{
       Panel = <Advanced {...this.state} />
     }
-    
+
     return (
       <div className="App">
         <nav style={navStyle} className="navbar pure-menu pure-menu-horizontal">

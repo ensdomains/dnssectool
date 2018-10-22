@@ -1,4 +1,6 @@
 import React, { Component } from 'react'
+import rrToString from '../utils/rrToString';
+
 class Advanced extends Component {
   render() {
     if(this.props.domain){
@@ -18,18 +20,23 @@ class Advanced extends Component {
         <form onSubmit={this.props.handleLookup.bind(this)}>
           <input type="text" value={this.props.domain} onChange={this.props.handleChange.bind(this)} required />
           <input type="submit" value="Lookup" />
-          <h3>On DNS</h3>
-          <p>
-          <a href={`http://dnsviz.net/d/_ens.${this.props.domain}/dnssec`} target="_blank" >
-              {dnsEntry}
-          </a> {this.props.owner}</p>
-        </form>
+          </form>
+        <h3>On DNS</h3>
+        <pre>
+        {
+            this.props.claim.result.results.map((result, i) => {
+                var rrs = result.rrs.map(rrToString);
+                rrs.push(rrToString(result.sig));
+                return rrs.join("\n");
+            }).join("\n\n")
+        }
+        </pre>
         <h3>On DNSSEC Oracle</h3>
         <table>
         <tr>
             <th>#</th>
             <th>name</th>
-            <th>type</th> 
+            <th>type</th>
             <th>matched?</th>
         </tr>
         {
