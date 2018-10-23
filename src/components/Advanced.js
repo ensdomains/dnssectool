@@ -38,6 +38,10 @@ class Advanced extends Component {
             <th>name</th>
             <th>type</th>
             <th>matched?</th>
+            <th>inception(oracle)</th>
+            <th>inception(dns)</th>
+            <th>hash(oracle)</th>
+            <th>hash(dictionary)</th>
         </tr>
         {
             this.props.proofs.sort((a,b)=>{return a.index - b.index}).map((proof, i) => {
@@ -53,6 +57,10 @@ class Advanced extends Component {
                     </span>
                 </div>
                 </td>
+                <td>{proof.inception}</td>
+                <td>{proof.inceptionToProve}</td>
+                <td>{proof.proof}</td>
+                <td>{proof.toProve}</td>
                 </tr>
             )
             })

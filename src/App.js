@@ -179,11 +179,9 @@ class App extends Component {
       this.setState({ proofs: [], owner: text });
       if(claim.result.proofs){
         return Promise.all(claim.result.proofs.map((proof) => claim.oracle.knownProof(proof))).then((provens)=>{
-          console.log('provens', provens)
            return claim.result.proofs.map((proof, i) => {
-            var toProve = this.state.web3.sha3(proof.rrdata.toString('hex'), {encoding:"hex"}).slice(0,42)
             let matched;
-            if(toProve === provens[i]){
+            if(provens[i].matched){
               matched = "✅";
             }else{
               matched = "❎";
@@ -192,9 +190,11 @@ class App extends Component {
               index: i+1,
               name: proof.name,
               type: proof.type,
-              proof: provens[i],
-              toProve:toProve,
-              matched:matched
+              inception:provens[i].inception,
+              inceptionToProve: provens[i].inceptionToProve,
+              proof: provens[i].hash,
+              toProve:provens[i].hashToProve,
+              matched:matched,
             };
            })
         });
@@ -207,7 +207,7 @@ class App extends Component {
       this.setState({
           proofs: proofs
       });
-      console.log('ens owner of ', this.state.domain)
+
       if (parseInt(this.state.tldOwner) != 0){
         return ens.owner(this.state.domain);
       }
