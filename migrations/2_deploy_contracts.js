@@ -23,7 +23,14 @@ module.exports = function(deployer) {
     .then(() => deployer.deploy([[ENSRegistry], [rsasha256], [rsasha1], [sha256], [sha1], [nsec3sha1]]))
     .then(() => ENSRegistry.deployed().then(_ens => ens = _ens))
     .then(() => DNSSEC.deployed().then(_dnssec => dnssec = _dnssec))
-    .then(() => deployer.deploy(DNSRegistrar, dnssec.address, ens.address))
+    .then(() => deployer.deploy(
+        DNSRegistrar,
+        dnssec.address,
+        ens.address,
+        dns.hexEncodeName(tld + "."),
+        namehash.hash(tld)
+      )
+    )
     .then(() => DNSRegistrar.deployed().then(_registrar => registrar = _registrar))
     .then(() => ENSRegistry.deployed().then(_ens => _ens.setSubnodeOwner(0, web3.sha3(tld), registrar.address)))
     .then(() => DNSSEC.deployed().then((_dnssec) => {
