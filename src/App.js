@@ -3,6 +3,9 @@ import ENS from 'ethereum-ens';
 import Promise from 'promise';
 import getWeb3 from './utils/getWeb3';
 const DNSRegistrarJS = require('@ensdomains/dnsregistrar');
+import TruffleContract from 'truffle-contract'
+const ENSRegistryArtifact = require('../build/contracts/ENSRegistry.json');
+
 import EnterDomain from './components/EnterDomain';
 import EnableDNSSEC from './components/EnableDNSSEC';
 import AddText from './components/AddText';
@@ -151,11 +154,27 @@ class App extends Component {
     var registrarjs;
     var ens;
     var claim;
+    var tld = this.state.domain.split('.').reverse()[0];
 
     var provider = this.state.web3.currentProvider;
-    ens = new ENS(provider);
-    let tld = this.state.domain.split('.').reverse()[0];
-    return ens.owner(tld).then((tldOwner)=>{
+    var ENSRegistry = TruffleContract(ENSRegistryArtifact);
+    ENSRegistry.setProvider(provider)
+    let deployer;
+    if(parseInt(this.state.netId)>10){
+      deployer  = ENSRegistry.deployed;
+    }else{
+      deployer = Promise.resolve;
+    }
+    deployer().then((r)=>{
+      if(r){
+        console.log('address', r.address)
+        ens = new ENS(provider, r.address);
+      }else{
+        console.log('public network')
+        ens = new ENS(provider);
+      }
+      return ens.owner(tld);
+    }).then((tldOwner)=>{
       registrarjs = new DNSRegistrarJS(provider, tldOwner);
       this.setState({tldOwner:tldOwner});
       if(parseInt(tldOwner) == 0 || tld == 'eth' || tld == 'test'){
@@ -191,7 +210,7 @@ class App extends Component {
               name: proof.name,
               type: proof.type,
               inception:provens[i].inception,
-              inceptionToProve: provens[i].inceptionToProve,
+              inceptionToProve: proof.inception,
               proof: provens[i].hash,
               toProve:provens[i].hashToProve,
               matched:matched,
@@ -203,11 +222,9 @@ class App extends Component {
       }
     }).then((proofs) =>{
       if(!proofs) return false;
-
       this.setState({
-          proofs: proofs
+        proofs: proofs
       });
-
       if (parseInt(this.state.tldOwner) != 0){
         return ens.owner(this.state.domain);
       }
@@ -249,7 +266,7 @@ class App extends Component {
               console.log('This is an unknown network.')
           }
           console.log('network', network)
-          this.setState({ network:network})
+          this.setState({ network:network, netId:netId})
         }
       })
     })

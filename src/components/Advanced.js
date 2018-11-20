@@ -41,7 +41,7 @@ class Advanced extends Component {
             <th>inception(oracle)</th>
             <th>inception(dns)</th>
             <th>hash(oracle)</th>
-            <th>hash(dictionary)</th>
+            <th>hash(dns)</th>
         </tr>
         {
             this.props.proofs.sort((a,b)=>{return a.index - b.index}).map((proof, i) => {
