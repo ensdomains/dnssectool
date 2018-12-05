@@ -8,8 +8,8 @@ var DNSRegistrar      = artifacts.require("@ensdomains/dnsregistrar/DNSRegistrar
 var ENSRegistry       = artifacts.require("@ensdomains/ens/ENSRegistry.sol");
 var namehash = require('eth-ens-namehash');
 var packet   = require('dns-packet');
-var dns      = require("@ensdomains/dnssec-oracle/lib/dns.js");
-var anchors  = dns.anchors;
+const dnsAnchors = require("@ensdomains/dnssec-oracle/lib/anchors.js");
+var anchors  = dnsAnchors.realEntries;
 
 var tld = "xyz";
 let ens, algorithm, digest;
@@ -19,16 +19,14 @@ function hexEncodeName(name){
 }
 
 module.exports = function(deployer) {
-  return deployer.deploy(DNSSEC, dns.encodeAnchors(anchors))
+  return deployer.deploy(DNSSEC, dnsAnchors.encode(anchors))
     .then(() => deployer.deploy([[ENSRegistry], [rsasha256], [rsasha1], [sha256], [sha1], [nsec3sha1]]))
     .then(() => ENSRegistry.deployed().then(_ens => ens = _ens))
     .then(() => DNSSEC.deployed().then(_dnssec => dnssec = _dnssec))
     .then(() => deployer.deploy(
         DNSRegistrar,
         dnssec.address,
-        ens.address,
-        dns.hexEncodeName(tld + "."),
-        namehash.hash(tld)
+        ens.address
       )
     )
     .then(() => DNSRegistrar.deployed().then(_registrar => registrar = _registrar))
