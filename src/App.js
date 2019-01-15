@@ -189,16 +189,16 @@ class App extends Component {
     }).then((_claim)=>{
       if(!_claim) return false;
       claim = _claim;
-
-      this.setState({claim:claim, dnsFound:claim.found, nsecFound:claim.nsec});
+      var result = claim.getResult();
+      this.setState({claim:claim, dnsFound:result.found, nsecFound:result.nsec});
       let text ='has no ETH address set';
-      if(claim.found){
+      if(result.found){
         text = `has TXT record with a=` + claim.getOwner();
       }
       this.setState({ proofs: [], owner: text });
-      if(claim.result.proofs){
-        return Promise.all(claim.result.proofs.map((proof) => claim.oracle.knownProof(proof))).then((provens)=>{
-           return claim.result.proofs.map((proof, i) => {
+      if(result.proofs){
+        return Promise.all(result.proofs.map((proof) => claim.oracle.knownProof(proof))).then((provens)=>{
+           return result.proofs.map((proof, i) => {
             let matched;
             if(provens[i].matched){
               matched = "✅";
