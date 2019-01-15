@@ -7,7 +7,7 @@ class EnableDNSSEC extends Component {
       <div>
         <h3>Enable DNSSEC</h3>
         <p>
-          The donmain "{this.props.domain}" does not seem to have DNSSEC enabled.
+          The domain "{this.props.domain}" does not seem to have DNSSEC enabled.
         </p>
         <h5>Example</h5>
         <img className="example-image" alt="Example" src={require('../images/enable_dnssec.png')}></img>
