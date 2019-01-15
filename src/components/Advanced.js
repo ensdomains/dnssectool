@@ -13,7 +13,7 @@ class Advanced extends Component {
         </form>
       )
     }
-
+    let getResult = this.props.claim.getResult()
     return (
       <div>
         <h3>Domain</h3>
@@ -21,16 +21,23 @@ class Advanced extends Component {
           <input type="text" value={this.props.domain} onChange={this.props.handleChange.bind(this)} required />
           <input type="submit" value="Lookup" />
           </form>
+
         <h3>On DNS</h3>
-        <pre>
-        {
-            this.props.claim.result.results.map((result, i) => {
+        <pre style={{paddingBottom:'2em'}}>
+          [
+            {
+              "\n" + getResult.results.map((result, i) => {
                 var rrs = result.rrs.map(rrToString);
-                rrs.push(rrToString(result.sig));
+                rrs = rrs.map((r)=> {return `//   ${r}`});
+                rrs.push(`//   ${rrToString(result.sig)}`);
+                var proof = getResult.proofs[i];
+                rrs.push(JSON.stringify([proof.name].concat(proof.toSubmit())) + ',')
                 return rrs.join("\n");
-            }).join("\n\n")
-        }
+              }).join("\n\n")
+            }
+          ]
         </pre>
+
         <h3>On DNSSEC Oracle</h3>
         <table>
         <tr>
