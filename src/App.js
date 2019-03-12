@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import Web3 from 'web3';
 import ENS from 'ethereum-ens';
 import Promise from 'promise';
 import getWeb3 from './utils/getWeb3';
@@ -167,11 +168,9 @@ class App extends Component {
     }
     deployer().then((r)=>{
       if(r){
-        console.log('address', r.address)
         ens = new ENS(provider, r.address);
       }else{
-        console.log('public network')
-        ens = new ENS(provider);
+        ens = new ENS(provider, undefined, Web3);
       }
       return ens.owner(tld);
     }).then((tldOwner)=>{
@@ -250,17 +249,19 @@ class App extends Component {
 
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.setState({accounts:accounts});
-      this.state.web3.version.getNetwork((err, netId) =>{
-        console.log('getNetwork', err, netId)
+      this.state.web3.eth.net.getId((err, netId) =>{
         if(err){
           console.log('error', err)
         }else{
           switch (netId) {
-            case "1":
+            case 1:
               network = 'mainnet';
               break
-            case "3":
+            case 3:
               network = 'ropsten';
+              break
+            case 5:
+              network = 'goerli';
               break
             default:
               console.log('This is an unknown network.')

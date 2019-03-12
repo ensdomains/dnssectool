@@ -50,17 +50,18 @@
     "whatwg-fetch": "1.0.0"
   },
   "dependencies": {
-    "@ensdomains/dnsregistrar": "0.1.0",
+    "@ensdomains/dnsregistrar": "0.3.0",
     "@ensdomains/dnssec-oracle": "0.0.8",
     "@ensdomains/ens": "^0.1.1",
     "dns-packet": "^5.0.4",
     "dotenv": "^2.0.0",
     "eth-ens-namehash": "^2.0.8",
-    "ethereum-ens": "^0.7.4",
+    "ethereum-ens": "^0.7.5",
     "gh-pages": "^1.2.0",
     "promise": "7.1.1",
     "react": "^15.4.2",
-    "react-dom": "^15.4.2"
+    "react-dom": "^15.4.2",
+    "web3": "^1.0.0-beta.34"
   },
   "scripts": {
     "start": "node scripts/start.js",
